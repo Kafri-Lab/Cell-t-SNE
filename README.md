@@ -22,7 +22,7 @@ Color Legend (Ground Truth)
 I'm hoping to clean up the code. Open an issue if you need help.
 
 
-## Futher reading about t-SNE:
+## Futher reading about t-SNE...
 
 - http://distill.pub/2016/misread-tsne/
 - https://indico.io/blog/visualizing-with-t-sne/
