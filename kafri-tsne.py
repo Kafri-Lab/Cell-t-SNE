@@ -15,8 +15,8 @@ from tsne import bh_sne
 @click.command()
 @click.option('--input-folder', help='The folder that contains the images.')
 @click.option('--perplexity', default=20, help='todo')
-@click.option('--output', default='output.jpg', help='output to tsne image')
-def tsne(input_folder, perplexity, output):
+@click.option('--output-filename', default='output.jpg', help='output to tsne image')
+def tsne(input_folder, perplexity, output_filename):
     
     data = OfficialImageClassification(x_dtype="float32")
 
@@ -25,12 +25,12 @@ def tsne(input_folder, perplexity, output):
     import code
     #code.interact(local=locals())
 
-
     images = []
 
 # convert image data to float64 matrix. float64 is need for bh_sne
     x_data = np.asarray(x_data).astype('float64')
     x_data = x_data.reshape((x_data.shape[0], -1))
+
 
 # For speed of computation, only run on a subset
     n = 300

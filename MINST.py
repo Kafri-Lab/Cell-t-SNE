@@ -17,6 +17,7 @@ x_data = x_data.reshape((x_data.shape[0], -1))
 # For speed of computation, only run on a subset
 n = 300
 x_data = x_data[:n]
+print x_data.shape
 y_data = y_data[:n]
 
 # perform t-SNE embedding
@@ -26,8 +27,8 @@ vis_data = bh_sne(x_data)
 vis_x = vis_data[:, 0]
 vis_y = vis_data[:, 1]
 
-cmap = plt.cm.get_cmap("jet", 10)
+#cmap = plt.cm.get_cmap("jet", 10) # not needed? 
 plt.scatter(vis_x, vis_y, c=y_data)
-# plt.colorbar(ticks=range(10))
-# plt.clim(-0.5, 9.5)
+#plt.colorbar(ticks=range(10)) # colour bar/ legend
+#plt.clim(-0.5, 9.5) # not needed?
 plt.show()
