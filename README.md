@@ -2,7 +2,7 @@
 
 t-SNE Result Plot:
 
-![tsne output](https://github.com/Kafri-Lab/Cell-t-SNE/blob/master/readme_images/output-tsne.png?raw=true "tsne output")
+![tsne output](https://github.com/Kafri-Lab/Cell-t-SNE/blob/master/readme_images/output-tsne-full%20resolution.png?raw=true "tsne output")
 
 Color Legend (Ground Truth)
 - ![#00dd0e](https://placehold.it/15/00dd0e/000000?text=+) Green cells are cytoplasm stained only and are correctly grouped by t-SNE.
