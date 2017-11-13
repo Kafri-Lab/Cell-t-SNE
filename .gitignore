@@ -1,3 +1,4 @@
+*.pyc
 .jupyter/
 .ipynb_checkpoints/
 old/
