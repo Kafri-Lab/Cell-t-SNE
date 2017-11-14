@@ -1,0 +1,6 @@
+Example to call tsne function:
+
+./main.py tsne  --csv ResultTable\ -\ 2\ wells\,\ 1\ fields\,\ thresh\ 160_with_Traces_full_curated.csv 
+
+Example to display cells in an "image scatter":
+./main.py image_scatter  --csv ResultTable\ -\ 2\ wells\,\ 1\ fields\,\ thresh\ 160_with_Traces_full_curated.csv -x tsne1 -y tsne2 --colour CellLine --dpi 650

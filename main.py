@@ -7,7 +7,7 @@ import glob
 import watershed # label image by calling watershed.py
 import utils # crop cell by calling utils.py
 import plot
-import tsne1
+# import tsne1
 from PIL import Image
 import skimage
 import skimage.io
@@ -64,14 +64,6 @@ def crop_images(csv):
   print('Saved number of cropped cells: %s' % df.shape[0])
   #     save the location of the cropped image into csv
 
-
-
-color_map = {
-    'WT': (0,255,0),
-    'LFS': (100,100,100),
-    # 'WC': (0,0,10),
-    # 'Peroxi': (10,0,0)
-}
 
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
