@@ -24,3 +24,6 @@ Pseudocode:
   create scatter plot
   save to file
 
+Useful Bash Command Notes
+=======================
+q  -H -d',' "select FileName,ImageDir,Row,Column,CellType from t.csv WHERE CellID LIKE '6a77d997-7621-4b9e-ae1a-680b9add5d8c'" | column -t -s $','

@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+import os
 import numpy as np
 import pylab
 import mahotas as mh
 import glob     
 import watershed # label image by calling watershed.py
 import utils # crop cell by calling utils.py
+import plot
 import tsne1
 from PIL import Image
 import skimage
@@ -12,6 +14,9 @@ import skimage.io
 import scipy
 import pandas as pd
 import click
+from matplotlib import pyplot as plt
+import matplotlib.patches as mpatches
+
 
 
 def everything():
@@ -36,7 +41,7 @@ def everything():
 
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
-def create_cropped_images_given_csv(csv):
+def crop_images(csv):
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
   image_dir = './images/Ron/'
@@ -60,9 +65,81 @@ def create_cropped_images_given_csv(csv):
   #     save the location of the cropped image into csv
 
 
+
+color_map = {
+    'WT': (0,255,0),
+    'LFS': (100,100,100),
+    # 'WC': (0,0,10),
+    # 'Peroxi': (10,0,0)
+}
+
+@click.command()
+@click.option('--csv', help='The csv file that contains single cell data.', required=True)
+@click.option('--colour', help='The measurement name to colour the boxes by.', default='Trace')
+@click.option('-x', help='The measurement name on the X axis.', required=True)
+@click.option('-y', help='The measurement name on the Y axis.', required=True)
+@click.option('--dpi', help='The resolution to save the output image.', default=200)
+def image_scatter(csv,colour,x,y,dpi):
+
+  df = utils.read_csv(csv)
+  print('Found number of cells: %s' % df.shape[0])
+  image_dir = './images/cropped_images/Ron/'
+  cell_imgs = []
+  colours = []
+  xx = np.array([])
+  yy = np.array([])
+
+  color_map = utils.get_cmap(len(np.unique(df[colour])))
+
+  for row_id, row in df.iterrows():
+    cell_id = row.CellID
+    image_filename = image_dir + cell_id + '.jpg'
+    if not os.path.exists(image_filename):
+      print('[WARN] no image found %s'% image_filename)
+      continue
+    print('Loading image %s' % image_filename)
+    image = skimage.io.imread(image_filename)
+    image = utils.gray_to_color(image)
+    cell_imgs.append(image)
+    xx = np.append(xx,row[x])
+    yy = np.append(yy,row[y])
+    color_id = np.where(np.unique(df[colour])==row[colour])[0][0] # find position where this value appears
+    color = color_map(color_id)
+    color = (int(color[0]*255),int(color[1]*255),int(color[2]*255))
+    colours.append(color)
+
+  canvas = plot.image_scatter(xx, yy, cell_imgs, colours, min_canvas_size=4000)
+
+  plt.imshow(canvas)
+  plt.title('%s vs %s' % (x,y))
+  plt.xlabel('%s' % x)
+  plt.ylabel('%s' % y)
+  patches=[]
+  for i in range(len(np.unique(df[colour]))):
+    # print i
+    # print color_map(i)
+    patch = mpatches.Patch(color=color_map(i), label='%s %s' % (colour, np.unique(df[colour])[i]))
+    patches.append(patch)
+  plt.legend(handles=patches,fontsize=10)
+  plt.legend(handles=patches,bbox_to_anchor=(1.04,0.5), loc="center left", borderaxespad=0)
+  # plt.show()
+
+  save_location = './images/%s_image_scatter_by_%s_dpi%s.jpg' % (csv, colour, dpi)
+  plt.savefig(save_location,dpi=dpi)
+  # plt.savefig('image.jpg',dpi=1200  )
+  # scipy.misc.imsave(save_location, canvas)
+  print('Saved image scatter to %s' % save_location)
+
+# Setup group of command line commands
+@click.group()
+def cli():
+    pass
+cli.add_command(crop_images)
+cli.add_command(image_scatter)
+
 if __name__ == '__main__':
+  cli()  # make command line commands available
   # everything()
-  create_cropped_images_given_csv()
 
 
 # import pylab

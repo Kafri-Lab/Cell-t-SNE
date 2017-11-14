@@ -1,4 +1,7 @@
 *.pyc
+*.csv
+*.jpg
+*.tiff
 .jupyter/
 .ipynb_checkpoints/
 old/

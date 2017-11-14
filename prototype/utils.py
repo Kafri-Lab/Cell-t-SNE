@@ -5,6 +5,7 @@ import mahotas as mh
 import skimage
 from IPython import embed
 from skimage.measure import regionprops 
+from matplotlib import pyplot as plt
 import scipy.misc
 
 import pandas as pd
@@ -43,3 +44,14 @@ def crop_and_save(image, labelled, save_location, filenames=None):
 def read_csv(filename):
   df = pd.read_csv(filename)
   return df
+
+def gray_to_color(img):
+    if len(img.shape) == 2:
+        img = np.invert(img)
+        img = np.dstack((img, img, img))
+    return img
+
+def get_cmap(n, name='jet'):
+    '''Returns a function that maps each index in 0, 1, ..., n-1 to a distinct 
+    RGB color; the keyword argument name must be a standard mpl colormap name.'''
+    return plt.cm.get_cmap(name, n)
