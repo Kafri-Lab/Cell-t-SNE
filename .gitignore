@@ -4,6 +4,5 @@
 *.tiff
 .jupyter/
 .ipynb_checkpoints/
-old/
 prototype/images/Heather/
 prototype/images/cropped_images/

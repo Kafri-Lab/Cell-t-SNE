@@ -1,0 +1,29 @@
+
+
+1. Create cropped images (for visualization of both PCA and tsne and other uses)
+=======================
+Pseudocode:
+  load csv of cells
+  create cropped images
+  save to csv
+
+2. Create t-SNE (measurements only)
+=======================
+Pseudocode:
+  load csv of cells
+  load cropped images
+  create t-sne measurements
+  save to csv
+
+3. Create scatter plot of cells organized by their t-SNE measurements
+=======================
+Pseudocode:
+  load csv of cells
+  load cropped images
+  load t-sne or PCA measurements
+  create scatter plot
+  save to file
+
+Useful Bash Command Notes
+=======================
+q  -H -d',' "select FileName,ImageDir,Row,Column,CellType from t.csv WHERE CellID LIKE '6a77d997-7621-4b9e-ae1a-680b9add5d8c'" | column -t -s $','
