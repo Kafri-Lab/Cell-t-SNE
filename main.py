@@ -16,6 +16,9 @@ import pandas as pd
 import click
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
+from tsne import bh_sne
+import code
+from IPython import embed
 
 
 
@@ -37,6 +40,7 @@ def everything():
   	x_value[:,count] = image1d # add a row of values
   	count += 1
 
+
   tsne1.tSNE(x_value) #plot data using tsne
 
 @click.command()
@@ -44,9 +48,9 @@ def everything():
 def crop_images(csv):
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
-  image_dir = './images/Ron/'
+  image_dir = './images/LFS images/'
   for image_filename in df.FileName.unique():
-    image = skimage.io.imread(image_dir + image_filename)
+    image = skimage.io.imread(image_dir+image_filename)
     labelled = np.zeros(image.shape)
     cells_in_img = df.loc[df['FileName'] == image_filename]
     cell_ids = []
@@ -59,7 +63,7 @@ def crop_images(csv):
       count+=1
 
 
-    save_location = './images/cropped_images/Ron/'
+    save_location = './images/cropped_images/'
     utils.crop_and_save(image, labelled, save_location, filenames=cell_ids)
   print('Saved number of cropped cells: %s' % df.shape[0])
   #     save the location of the cropped image into csv
@@ -67,15 +71,54 @@ def crop_images(csv):
 
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
+def tsne_images(csv):
+  image_dir = './images/cropped_images/'
+  filenames=list(glob.glob(image_dir+'*.jpg'))
+  '''
+  x_value = np.zeros((4900, len(filenames))) # Dimension of the image: 70*70=4900; x_value will store images in 2d array
+  for imageName in filenames: 
+    count = 0
+    image1d = scipy.misc.imresize(skimage.io.imread(imageName), (70,70)) #reshape size to 70,70 for every image
+    image1d = image1d.flatten() #image1d stores a 1d array for each image
+    x_value[:,count] = image1d # add a row of values
+    count += 1
+  '''
+  x_value = np.zeros((len(filenames),4900)) # Dimension of the image: 70*70=4900; x_value will store images in 2d array
+  print filenames
+  count = 0
+  for imageName in filenames: 
+    image1d = scipy.misc.imresize(skimage.io.imread(imageName), (70,70)) #reshape size to 70,70 for every image
+    image1d = image1d.flatten() #image1d stores a 1d array for each image
+    x_value[count,:] = image1d # add a row of values
+    #embed()
+    count += 1
+    if count>50:
+      break
+
+  print x_value.shape
+  vis_data = bh_sne(x_value,perplexity=5)# tsne embedding
+  print vis_data.shape
+  vis_x = vis_data[:, 0]
+  vis_y = vis_data[:, 1]
+  
+ 
+  df = utils.read_csv(csv)
+  print df.shape
+  df['tsne1']=pd.Series (vis_x)
+  df['tsne2']=pd.Series (vis_y)
+  df.to_csv(csv)
+  
+@click.command()
+@click.option('--csv', help='The csv file that contains single cell data.', required=True)
 @click.option('--colour', help='The measurement name to colour the boxes by.', default='Trace')
 @click.option('-x', help='The measurement name on the X axis.', required=True)
 @click.option('-y', help='The measurement name on the Y axis.', required=True)
 @click.option('--dpi', help='The resolution to save the output image.', default=200)
-def image_scatter(csv,colour,x,y,dpi):
 
+def image_scatter(csv,colour,x,y,dpi):
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
-  image_dir = './images/cropped_images/Ron/'
+  image_dir = './images/cropped_images/'
   cell_imgs = []
   colours = []
   xx = np.array([])
@@ -99,7 +142,6 @@ def image_scatter(csv,colour,x,y,dpi):
     color = color_map(color_id)
     color = (int(color[0]*255),int(color[1]*255),int(color[2]*255))
     colours.append(color)
-
   canvas = plot.image_scatter(xx, yy, cell_imgs, colours, min_canvas_size=4000)
 
   plt.imshow(canvas)
@@ -118,7 +160,7 @@ def image_scatter(csv,colour,x,y,dpi):
 
   save_location = './images/%s_image_scatter_by_%s_dpi%s.jpg' % (csv, colour, dpi)
   plt.savefig(save_location,dpi=dpi)
-  # plt.savefig('image.jpg',dpi=1200  )
+  # plt.savefig('image.jpg',dpi=1200)
   # scipy.misc.imsave(save_location, canvas)
   print('Saved image scatter to %s' % save_location)
 
@@ -128,6 +170,7 @@ def cli():
     pass
 cli.add_command(crop_images)
 cli.add_command(image_scatter)
+cli.add_command(tsne_images)
 
 if __name__ == '__main__':
   cli()  # make command line commands available
