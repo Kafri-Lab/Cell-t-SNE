@@ -41,16 +41,25 @@ def everything():
 
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
-def crop_images(csv):
+@click.option('--channel', help='The image channel to crop.', default=1)
+@click.option('--square/--rectangle', help='Crop the cell in into a square box rather than a rectangle.', default=False)
+def crop_images(csv,channel,square):
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
   image_dir = './images/Ron/'
+  # Loop by image
   for image_filename in df.FileName.unique():
-    image = skimage.io.imread(image_dir + image_filename)
-    labelled = np.zeros(image.shape)
     cells_in_img = df.loc[df['FileName'] == image_filename]
     cell_ids = []
+    # Set the channel number in the image filename to load
+    s = list(image_filename)
+    s[15]=str(channel)
+    ch_image_filename = "".join(s)
+    # Load image
+    image = skimage.io.imread(image_dir + ch_image_filename)
 
+    # Build labelled image
+    labelled = np.zeros(image.shape)
     count = 1
     for row_index, row in cells_in_img.iterrows():
       cyto_px_ids = map(int, row.cyto_boundaries.split()) # get locations of this cell's boundries as a list of ints
@@ -58,34 +67,37 @@ def crop_images(csv):
       cell_ids.append(row.CellID)
       count+=1
 
-
-    save_location = './images/cropped_images/Ron/'
-    utils.crop_and_save(image, labelled, save_location, filenames=cell_ids)
+    save_location = './images/cropped_images/Ron/ch%s-' % channel
+    utils.crop_and_save(image, labelled, save_location, filenames=cell_ids, square=square)
   print('Saved number of cropped cells: %s' % df.shape[0])
-  #     save the location of the cropped image into csv
-
 
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
-@click.option('--colour', help='The measurement name to colour the boxes by.', default='Trace')
+@click.option('--color-by', help='The measurement name to color the boxes by.', default='Trace')
 @click.option('-x', help='The measurement name on the X axis.', required=True)
 @click.option('-y', help='The measurement name on the Y axis.', required=True)
 @click.option('--dpi', help='The resolution to save the output image.', default=200)
-def image_scatter(csv,colour,x,y,dpi):
+@click.option('--channel', help='The image channel to display.', default=1)
+def image_scatter(csv,color_by,x,y,dpi,channel):
 
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
   image_dir = './images/cropped_images/Ron/'
   cell_imgs = []
-  colours = []
+  colors = []
   xx = np.array([])
   yy = np.array([])
 
-  color_map = utils.get_cmap(len(np.unique(df[colour])))
+  cmap='gist_rainbow'
+  color_list = utils.get_colors(len(np.unique(df[color_by])),cmap=cmap)
+
+  # blue is better when there are only 3 colours
+  if len(color_list) == 3 and cmap == 'gist_rainbow':
+    color_list[2] = (0.05, 0.529, 1, 1.0)
 
   for row_id, row in df.iterrows():
     cell_id = row.CellID
-    image_filename = image_dir + cell_id + '.jpg'
+    image_filename = image_dir + 'ch' + str(channel) + '-' + cell_id + '.jpg'
     if not os.path.exists(image_filename):
       print('[WARN] no image found %s'% image_filename)
       continue
@@ -95,31 +107,41 @@ def image_scatter(csv,colour,x,y,dpi):
     cell_imgs.append(image)
     xx = np.append(xx,row[x])
     yy = np.append(yy,row[y])
-    color_id = np.where(np.unique(df[colour])==row[colour])[0][0] # find position where this value appears
-    color = color_map(color_id)
-    color = (int(color[0]*255),int(color[1]*255),int(color[2]*255))
-    colours.append(color)
+    color_id = np.where(np.unique(df[color_by])==row[color_by])[0][0] # find position where this value appears
+    c = color_list[color_id]
+    c = (int(c[0]*255),int(c[1]*255),int(c[2]*255)) # convert value range, ex. 1.0 -> 255 or 0.0 -> 0
+    colors.append(c)
 
-  canvas = plot.image_scatter(xx, yy, cell_imgs, colours, min_canvas_size=4000)
+  if len(cell_imgs)==0:
+    print('[ERROR] 0 cropped single cell images found.')
+    return
 
-  plt.imshow(canvas)
+  canvas = plot.image_scatter(yy, xx, cell_imgs, colors, min_canvas_size=4000)
+  plt.imshow(canvas,origin='lower')
   plt.title('%s vs %s' % (x,y))
   plt.xlabel('%s' % x)
   plt.ylabel('%s' % y)
+  plt.xticks([])
+  plt.yticks([])
   patches=[]
-  for i in range(len(np.unique(df[colour]))):
-    # print i
-    # print color_map(i)
-    patch = mpatches.Patch(color=color_map(i), label='%s %s' % (colour, np.unique(df[colour])[i]))
+  for i in range(len(np.unique(df[color_by]))):
+    label = '%s %s' % (color_by, np.unique(df[color_by])[i])
+    if color_by == 'Dend.cat':
+      label = 'Detected Category %s' % (i+1)
+    # Plot additional data that can't be in the main csv
+    # extra_datafile = 'PCaxes.csv'
+    # if os.path.exists(extra_datafile):
+    #   df_extra = utils.read_csv(extra_datafile)
+    #   from IPython import embed
+    #   embed() # drop into an IPython session
+    #   plt.scatter(avg_x, avg_y,c=color,marker='*')
+    patch = mpatches.Patch(color=color_list[i], label=label)
     patches.append(patch)
-  plt.legend(handles=patches,fontsize=10)
-  plt.legend(handles=patches,bbox_to_anchor=(1.04,0.5), loc="center left", borderaxespad=0)
-  # plt.show()
 
-  save_location = './images/%s_image_scatter_by_%s_dpi%s.jpg' % (csv, colour, dpi)
-  plt.savefig(save_location,dpi=dpi)
-  # plt.savefig('image.jpg',dpi=1200  )
-  # scipy.misc.imsave(save_location, canvas)
+  plt.legend(handles=patches,bbox_to_anchor=(1.04,0.5), loc="center left", borderaxespad=0, frameon=False)
+  save_location = './images/%s_image_scatter_by_%s_dpi%s.jpg' % (csv, color_by, dpi)
+  plt.savefig(save_location,dpi=dpi,pad_inches=1,bbox_inches='tight')
+  # plt.show()
   print('Saved image scatter to %s' % save_location)
 
 # Setup group of command line commands

@@ -1,6 +1,6 @@
 import numpy as np
 
-def image_scatter(xx, yy, images, colours, min_canvas_size=4000, bg_color=255., lw=10):
+def image_scatter(xx, yy, images, colours, min_canvas_size=4000, bg_color=255, lw=10):
     """
     Embeds images into a scatter plot.
     Parameters
@@ -18,6 +18,7 @@ def image_scatter(xx, yy, images, colours, min_canvas_size=4000, bg_color=255., 
     canvas: numpy array
         Image of visualization
     """
+
     max_width = max([image.shape[0] for image in images])
     max_height = max([image.shape[1] for image in images])
 
@@ -36,7 +37,7 @@ def image_scatter(xx, yy, images, colours, min_canvas_size=4000, bg_color=255., 
         canvas_res_y = scale_canvas_y/float(scale_canvas_x)*min_canvas_size
 
     # Create canvas by embedding images at the correct positions according it t-sne
-    canvas = np.ones((int(canvas_res_x)+max_width, int(canvas_res_y)+max_height, 3),dtype='uint8')*bg_color
+    canvas = np.ones((int(canvas_res_x)+max_width+lw, int(canvas_res_y)+max_height+lw, 3),dtype='uint8')*bg_color
     # TODO: Replace this to use a scale factor
     x_coords = np.linspace(x_min, x_max, canvas_res_x) # TODO: Replace this to use a scale factor
     y_coords = np.linspace(y_min, y_max, canvas_res_y) # TODO: Replace this to use a scale factor
@@ -46,10 +47,13 @@ def image_scatter(xx, yy, images, colours, min_canvas_size=4000, bg_color=255., 
         scaled_x = np.argmin((x - x_coords)**2)+lw # TODO: Replace this to use a scale factor
         scaled_y = np.argmin((y - y_coords)**2)+lw # TODO: Replace this to use a scale factor
         canvas[scaled_x-lw:scaled_x+w+lw, scaled_y-lw:scaled_y+h+lw] = colour # put coloured box around image 
+        # from IPython import embed
+        # embed() # drop into an IPython session
         canvas[scaled_x:scaled_x+w, scaled_y:scaled_y+h] = image # embed image
-        # from PIL import Image
-        # image = Image.fromarray(np.uint8(canvas))
-        # image.show()
+
+    # from PIL import Image
+    # image = Image.fromarray(np.uint8(canvas))
+    # image.show()
         # inn = raw_input("press enter..")
         # print inn
         # if inn == 'interp':
