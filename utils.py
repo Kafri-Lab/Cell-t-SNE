@@ -7,11 +7,10 @@ from IPython import embed
 from skimage.measure import regionprops 
 from matplotlib import pyplot as plt
 import scipy.misc
-
 import pandas as pd
 
 
-def crop_and_save(image, labelled, save_location, filenames=None, square=False, padding=5):
+def crop_and_save(image, labelled, save_location, filenames=None, square=False, resize=70, padding=5):
   nr_objects=int(np.max(labelled))
   stats = skimage.measure.regionprops(labelled.astype(int))
 
@@ -37,15 +36,15 @@ def crop_and_save(image, labelled, save_location, filenames=None, square=False, 
       starty = centroidValue[0]
 
     result = image[int(startx):int(startx+x_px_size), int(starty):int(starty+y_px_size)]
+    result = scipy.misc.imresize(result, (resize,resize)) 
     if result.size == 0:
       print('[WARN] image size is 0')
       continue
-
     name = filenames[index] if filenames else index # Use a given filename for this crop or use the index when saving
     filename = '%s%s.jpg' % (save_location, name)
     print('Saving cropped cell to file: %s' % filename)
     scipy.misc.imsave(filename, result)
-    
+
 
 def read_csv(filename):
   df = pd.read_csv(filename)

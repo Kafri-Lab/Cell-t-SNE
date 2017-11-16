@@ -17,6 +17,7 @@ import click
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
 from tsne import bh_sne
+from IPython import embed
 
 
 
@@ -40,14 +41,23 @@ def everything():
 
   tsne1.tSNE(x_value) #plot data using tsne
 
+
+
+
+
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
 @click.option('--channel', help='The image channel to crop.', default=1)
+@click.option('--resize', help='Size of the image', default=70)
 @click.option('--square/--rectangle', help='Crop the cell in into a square box rather than a rectangle.', default=False)
-def crop_images(csv,channel,square):
+def crop_images(csv,channel,resize,square):
+  
+  #./main.py crop_images  --csv ResultTable\ -\ 2\ wells\,\ 1\ fields\,\ thresh\ 160_with_Traces_full_curated.csv 
+  #./main.py crop_images  --csv ResultTable\ -\ 2\ wells\,\ 1\ fields\,\ thresh\ 160_with_Traces_full_curated.csv --resize 200
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
-  image_dir = './images/Ron/'
+  #image_dir = './images/Ron/'
+  image_dir = './images/LFS images/'
   # Loop by image
   for image_filename in df.FileName.unique():
     cells_in_img = df.loc[df['FileName'] == image_filename]
@@ -67,10 +77,22 @@ def crop_images(csv,channel,square):
       labelled[np.unravel_index(cyto_px_ids, labelled.shape, order='F')] = count # set this cell in the labelled image
       cell_ids.append(row.CellID)
       count+=1
+    
+    labelled1=scipy.ndimage.binary_fill_holes(labelled).astype(int)
+    print np.unique(labelled)
+    #embed()
+    image[labelled1==0]=0 #delete everything other than the cell "isolate_cell"
 
-    save_location = './images/cropped_images/Ron/ch%s-' % channel
-    utils.crop_and_save(image, labelled, save_location, filenames=cell_ids, square=square)
+
+    
+    #save_location = './images/cropped_images/Ron/ch%s-' % channel
+    save_location = './images/cropped_images/ch%s-' % channel
+    utils.crop_and_save(image, labelled, save_location, filenames=cell_ids, square=square, resize=resize)
   print('Saved number of cropped cells: %s' % df.shape[0])
+
+
+
+
 
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
@@ -80,10 +102,11 @@ def crop_images(csv,channel,square):
 @click.option('--dpi', help='The resolution to save the output image.', default=200)
 @click.option('--channel', help='The image channel to display.', default=1)
 def image_scatter(csv,color_by,x,y,dpi,channel):
-
+  #./main.py image_scatter  --csv ResultTable\ -\ 2\ wells\,\ 1\ fields\,\ thresh\ 160_with_Traces_full_curated.csv -x tsne1 -y tsne2 --color-by CellLine --dpi 650
   df = utils.read_csv(csv)
   print('Found number of cells: %s' % df.shape[0])
-  image_dir = './images/cropped_images/Ron/'
+  #image_dir = './images/cropped_images/Ron/'
+  image_dir = './images/cropped_images/'
   cell_imgs = []
   colors = []
   xx = np.array([])
@@ -145,9 +168,14 @@ def image_scatter(csv,color_by,x,y,dpi,channel):
   # plt.show()
   print('Saved image scatter to %s' % save_location)
 
+
+
+
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
-def tsne_images(csv):
+@click.option('--res', help='The resolution of image.', default=70)
+@click.option('--perplexity', help='The perplexcity of tsne plot.', default=5)
+def tsne_images(csv,res,perplexity):
   image_dir = './images/cropped_images/'
   filenames=list(glob.glob(image_dir+'*.jpg'))
   '''
@@ -159,11 +187,12 @@ def tsne_images(csv):
     x_value[:,count] = image1d # add a row of values
     count += 1
   '''
-  x_value = np.zeros((len(filenames),4900)) # Dimension of the image: 70*70=4900; x_value will store images in 2d array
+  total_res = res**2
+  x_value = np.zeros((len(filenames),total_res)) # Dimension of the image: 70*70=4900; x_value will store images in 2d array
   print filenames
   count = 0
   for imageName in filenames: 
-    image1d = scipy.misc.imresize(skimage.io.imread(imageName), (70,70)) #reshape size to 70,70 for every image
+    image1d = scipy.misc.imresize(skimage.io.imread(imageName), (res,res)) #reshape size to 70,70 for every image
     image1d = image1d.flatten() #image1d stores a 1d array for each image
     x_value[count,:] = image1d # add a row of values
     #embed()
@@ -172,7 +201,7 @@ def tsne_images(csv):
       break
 
   print x_value.shape
-  vis_data = bh_sne(x_value,perplexity=5)# tsne embedding
+  vis_data = bh_sne(x_value,perplexity=perplexity)# tsne embedding
   print vis_data.shape
   vis_x = vis_data[:, 0]
   vis_y = vis_data[:, 1]
