@@ -16,8 +16,9 @@ import pandas as pd
 import click
 from matplotlib import pyplot as plt
 import matplotlib.patches as mpatches
-from tsne import bh_sne
 from IPython import embed
+if os.name != 'nt':
+  from tsne import bh_sne
 
 
 
