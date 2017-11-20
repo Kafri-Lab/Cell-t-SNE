@@ -35,11 +35,20 @@ def crop_and_save(image, labelled, save_location, filenames=None, square=False, 
     if (centroidValue[1]<y_px_size/2):
       starty = centroidValue[0]
 
-    result = image[int(startx):int(startx+x_px_size), int(starty):int(starty+y_px_size)]
+    # Black out everything except the cell
+    labelled1=labelled==index+1 # get boundry of one cell indentified by it's index (1,2,3,etc. note: 0 is background)
+    labelled1=scipy.ndimage.binary_fill_holes(labelled1).astype(int) # fill interior of cell
+    image1 = image.copy() # create a copy of the image without blackout
+    image1[labelled1==0]=0 # set everything other than the cell to black
+
+    # Crop the cell
+    result = image1[int(startx):int(startx+x_px_size), int(starty):int(starty+y_px_size)]
     result = scipy.misc.imresize(result, (resize,resize)) 
     if result.size == 0:
       print('[WARN] image size is 0')
       continue
+
+
     name = filenames[index] if filenames else index # Use a given filename for this crop or use the index when saving
     filename = '%s%s.jpg' % (save_location, name)
     print('Saving cropped cell to file: %s' % filename)

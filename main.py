@@ -78,15 +78,7 @@ def crop_images(csv,channel,resize,square):
       labelled[np.unravel_index(cyto_px_ids, labelled.shape, order='F')] = count # set this cell in the labelled image
       cell_ids.append(row.CellID)
       count+=1
-    
-    labelled1=scipy.ndimage.binary_fill_holes(labelled).astype(int)
-    print np.unique(labelled)
-    #embed()
-    image[labelled1==0]=0 #delete everything other than the cell "isolate_cell"
 
-
-    
-    #save_location = './images/cropped_images/Ron/ch%s-' % channel
     save_location = './images/cropped_images/ch%s-' % channel
     utils.crop_and_save(image, labelled, save_location, filenames=cell_ids, square=square, resize=resize)
   print('Saved number of cropped cells: %s' % df.shape[0])
