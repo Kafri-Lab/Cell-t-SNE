@@ -49,7 +49,7 @@ def everything():
 @click.command()
 @click.option('--csv', help='The csv file that contains single cell data.', required=True)
 @click.option('--channel', help='The image channel to crop.', default=1)
-@click.option('--resize', help='Size of the image', default=70)
+@click.option('--resize', help='Size of the image', default=False)
 @click.option('--square/--rectangle', help='Crop the cell in into a square box rather than a rectangle.', default=False)
 def crop_images(csv,channel,resize,square):
   

@@ -43,7 +43,8 @@ def crop_and_save(image, labelled, save_location, filenames=None, square=False, 
 
     # Crop the cell
     result = image1[int(startx):int(startx+x_px_size), int(starty):int(starty+y_px_size)]
-    result = scipy.misc.imresize(result, (resize,resize)) 
+    if resize:
+      result = scipy.misc.imresize(result, (resize,resize)) 
     if result.size == 0:
       print('[WARN] image size is 0')
       continue
