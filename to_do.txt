@@ -1,0 +1,5 @@
+
+main.py segmentation --img_dir /path_to_images --output_csv 'foo.csv'
+main.py crop_images --csv 'ResultTable_curated_t193-WT-LFS.csv'
+main.py tsne_images --csv 'ResultTable_curated_t193-WT-LFS.csv' --res 70 --perplexity 30
+main.py image_scatter  --csv 'ResultTable_curated_t193-WT-LFS.csv' -x tsne1 -y tsne2 --dpi 650
